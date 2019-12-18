@@ -36,6 +36,9 @@ var (
 	totalWatcherInterval          = time.Duration(15) * time.Minute
 )
 
+// Set Local evn "FORCE_DEV_MODE = local" in order to run locally
+const envDevMode = "FORCE_DEV_MODE"
+
 var log = logf.Log.WithName("cmd")
 
 func printVersion() {
@@ -79,8 +82,7 @@ func main() {
 	// Become the leader before proceeding
 	err = leader.Become(ctx, "aws-account-operator-lock")
 	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
+	nil		os.Exit(1)
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
@@ -111,17 +113,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	//Create metrics endpoint and register metrics
-	metricsServer := metrics.NewBuilder().WithPort(metricsPort).WithPath(metricsPath).
-		WithCollectors(localmetrics.MetricsList).
-		WithRoute().
-		WithServiceName("aws-account-operator").
-		GetConfig()
+	detectDevMode := os.Getenv(envDevMode)
 
-	// Configure metrics if it errors log the error but continue
-	if err := metrics.ConfigureMetrics(context.TODO(), *metricsServer); err != nil {
-		log.Error(err, "Failed to configure Metrics")
-		os.Exit(1)
+	switch detectDevMode {
+	case "local":
+		log.Info("Running Locally, Skiping metrics configuration")
+	default:
+		//Create metrics endpoint and register metrics
+		metricsServer := metrics.NewBuilder().WithPort(metricsPort).WithPath(metricsPath).
+			WithCollectors(localmetrics.MetricsList).
+			WithRoute().
+			WithServiceName("aws-account-operator").
+			GetConfig()
+
+		// Configure metrics if it errors log the error but continue
+		if err := metrics.ConfigureMetrics(context.TODO(), *metricsServer); err != nil {
+			log.Error(err, "Failed to configure Metrics")
+			os.Exit(1)
+		}
 	}
 
 	// Define stopCh which we'll use to notify the secretWatcher (any any other routine)
