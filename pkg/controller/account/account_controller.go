@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -61,6 +62,9 @@ const (
 	byocRole                   = "BYOCAdminAccess"
 
 	adminAccessArn = "arn:aws:iam::aws:policy/AdministratorAccess"
+
+	// Set local env "FORCE_DEV_MODE = local" in order to run locally
+	envDevMode = "FORCE_DEV_MODE"
 )
 
 var coveredRegions = map[string]map[string]string{
@@ -348,10 +352,20 @@ func (r *ReconcileAccount) Reconcile(request reconcile.Request) (reconcile.Resul
 				return reconcile.Result{RequeueAfter: time.Duration(intervalAfterCaseCreationSecs+randomInterval) * time.Second}, nil
 			}
 
-			resolved, err := checkCaseResolution(reqLogger, currentAcctInstance.Status.SupportCaseID, awsSetupClient)
-			if err != nil {
-				reqLogger.Error(err, "Error checking for Case Resolution")
-				return reconcile.Result{}, err
+			detectDevMode := os.Getenv(envDevMode)
+			var resolved bool
+
+			switch detectDevMode {
+			case "local":
+				log.Info("Running Locally, Skipping case resolution check")
+				resolved = true
+			default:
+				resolvedScoped, err := checkCaseResolution(reqLogger, currentAcctInstance.Status.SupportCaseID, awsSetupClient)
+				if err != nil {
+					reqLogger.Error(err, "Error checking for Case Resolution")
+					return reconcile.Result{}, err
+				}
+				resolved = resolvedScoped
 			}
 
 			// Case Resolved, account is Ready
@@ -411,6 +425,14 @@ func (r *ReconcileAccount) Reconcile(request reconcile.Request) (reconcile.Resul
 				// set state creating if the account was able to create
 				SetAccountStatus(reqLogger, currentAcctInstance, "Attempting to create account", awsv1alpha1.AccountCreating, AccountCreating)
 				err = r.Client.Status().Update(context.TODO(), currentAcctInstance)
+
+				detectDevMode := os.Getenv(envDevMode)
+
+				switch detectDevMode {
+				case "local":
+					log.Info("Running Locally, manually creating a case ID number: 11111111")
+					currentAcctInstance.Status.SupportCaseID = "11111111"
+				}
 
 				if err != nil {
 					return reconcile.Result{}, err
