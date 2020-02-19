@@ -80,7 +80,7 @@ func main() {
 	// Become the leader before proceeding
 	err = leader.Become(ctx, "aws-account-operator-lock")
 	if err != nil {
-	nil		os.Exit(1)
+		os.Exit(1)
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
@@ -27,7 +28,7 @@ const (
 
 // DetectDevMode gets the environment variable to detect if we are running
 // locally or (future) have some other environment-specific conditions.
-var DetectDevMode string = os.Getenv(EnvDevMode)
+var DetectDevMode string = strings.ToLower(os.Getenv(EnvDevMode))
 
 func MarshalIAMPolicy(role awsv1alpha1.AWSFederatedRole) (string, error) {
 	// The JSON tags as captials due to requirements for the policydoc
