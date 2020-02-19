@@ -62,9 +62,6 @@ const (
 	byocRole                   = "BYOCAdminAccess"
 
 	adminAccessArn = "arn:aws:iam::aws:policy/AdministratorAccess"
-
-	// Set local env "FORCE_DEV_MODE = local" in order to run locally
-	envDevMode = "FORCE_DEV_MODE"
 )
 
 var coveredRegions = map[string]map[string]string{
@@ -352,10 +349,9 @@ func (r *ReconcileAccount) Reconcile(request reconcile.Request) (reconcile.Resul
 				return reconcile.Result{RequeueAfter: time.Duration(intervalAfterCaseCreationSecs+randomInterval) * time.Second}, nil
 			}
 
-			detectDevMode := os.Getenv(envDevMode)
 			var resolved bool
 
-			switch detectDevMode {
+			switch utils.DetectDevMode {
 			case "local":
 				log.Info("Running Locally, Skipping case resolution check")
 				resolved = true
@@ -426,9 +422,7 @@ func (r *ReconcileAccount) Reconcile(request reconcile.Request) (reconcile.Resul
 				SetAccountStatus(reqLogger, currentAcctInstance, "Attempting to create account", awsv1alpha1.AccountCreating, AccountCreating)
 				err = r.Client.Status().Update(context.TODO(), currentAcctInstance)
 
-				detectDevMode := os.Getenv(envDevMode)
-
-				switch detectDevMode {
+				switch utils.DetectDevMode {
 				case "local":
 					log.Info("Running Locally, manually creating a case ID number: 11111111")
 					currentAcctInstance.Status.SupportCaseID = "11111111"

@@ -11,6 +11,7 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	"github.com/openshift/aws-account-operator/pkg/apis"
 	"github.com/openshift/aws-account-operator/pkg/controller"
+	"github.com/openshift/aws-account-operator/pkg/controller/utils"
 	"github.com/openshift/aws-account-operator/pkg/credentialwatcher"
 	"github.com/openshift/aws-account-operator/pkg/localmetrics"
 	"github.com/openshift/aws-account-operator/pkg/totalaccountwatcher"
@@ -35,9 +36,6 @@ var (
 	hours                     int = 1
 	totalWatcherInterval          = time.Duration(15) * time.Minute
 )
-
-// Set Local evn "FORCE_DEV_MODE = local" in order to run locally
-const envDevMode = "FORCE_DEV_MODE"
 
 var log = logf.Log.WithName("cmd")
 
@@ -113,9 +111,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	detectDevMode := os.Getenv(envDevMode)
-
-	switch detectDevMode {
+	switch utils.DetectDevMode {
 	case "local":
 		log.Info("Running Locally, Skiping metrics configuration")
 	default:

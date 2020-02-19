@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
@@ -17,7 +18,16 @@ const (
 	EmailID   = "osd-creds-mgmt"
 	Finalizer = "finalizer.aws.managed.openshift.io"
 	WaitTime  = 25
+
+	// EnvDevMode is the name of the env var we set to run locally and to skip
+	// initialization procedures that will error out and exit the operator.
+	// ex: `FORCE_DEV_MODE=local operatorsdk up local`
+	EnvDevMode = "FORCE_DEV_MODE"
 )
+
+// DetectDevMode gets the environment variable to detect if we are running
+// locally or (future) have some other environment-specific conditions.
+var DetectDevMode string = os.Getenv(EnvDevMode)
 
 func MarshalIAMPolicy(role awsv1alpha1.AWSFederatedRole) (string, error) {
 	// The JSON tags as captials due to requirements for the policydoc
