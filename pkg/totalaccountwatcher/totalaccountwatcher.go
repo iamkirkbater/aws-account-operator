@@ -30,6 +30,7 @@ type totalAccountWatcher struct {
 	AwsClient     awsclient.Client
 	client        client.Client
 	Total         int
+	Initialized   bool
 }
 
 // Initialize creates a global instance of the TotalAccountWatcher
@@ -88,7 +89,7 @@ func (s *totalAccountWatcher) UpdateTotalAccounts(log logr.Logger) error {
 	accountTotal, err := TotalAwsAccounts()
 	if err != nil {
 		log.Error(err, "Failed to get account list with error code")
-		return nil
+		return err
 	}
 	localmetrics.Collector.SetTotalAWSAccounts(accountTotal)
 
@@ -96,6 +97,9 @@ func (s *totalAccountWatcher) UpdateTotalAccounts(log logr.Logger) error {
 		log.Info(fmt.Sprintf("Updating total from %d to %d", TotalAccountWatcher.Total, accountTotal))
 		TotalAccountWatcher.Total = accountTotal
 	}
+
+	// Let consumers know we've run successfully at least once
+	s.Initialized = true
 
 	return nil
 }
