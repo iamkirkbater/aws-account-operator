@@ -253,7 +253,7 @@ func (r *ReconcileAccount) Reconcile(request reconcile.Request) (reconcile.Resul
 
 			if !accountHasAwsAccountID(currentAcctInstance) {
 				// before doing anything make sure we are not over the limit if we are just error
-				if totalaccountwatcher.TotalAccountWatcher.Total == 0 {
+				if !totalaccountwatcher.TotalAccountWatcher.Initialized {
 					reqLogger.Error(awsv1alpha1.ErrAccountWatcherNoTotal, "AccountWatcher has not run successfully yet")
 					return reconcile.Result{}, awsv1alpha1.ErrAccountWatcherNoTotal
 				}
