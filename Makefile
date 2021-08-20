@@ -392,7 +392,7 @@ lint: check-spell
 
 # Test all
 .PHONY: test-all
-test-all: lint clean-operator test test-apis test-account-creation test-ccs test-reuse test-awsfederatedaccountaccess test-awsfederatedrole test-aws-ou-logic test-sts-accountclaim ## Runs all integration tests
+test-all: lint clean-operator test test-apis test-account-creation test-ccs test-reuse test-awsfederatedaccountaccess test-awsfederatedrole test-aws-ou-logic test-sts-accountclaim test-fake-accountclaim ## Runs all integration tests
 
 .PHONY: clean-operator
 clean-operator: ## Clean Operator
