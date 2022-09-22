@@ -417,7 +417,7 @@ func TestValidateAccountOrigin(t *testing.T) {
 			expectedErr: "Account is not in a ready state",
 		},
 		{
-			name: "Valid account origin",
+			name: "Valid account origin in accountpool",
 			args: args{
 				account: awsv1alpha1.Account{
 					ObjectMeta: v1.ObjectMeta{
@@ -428,6 +428,28 @@ func TestValidateAccountOrigin(t *testing.T) {
 						},
 						Name:      "testaccount",
 						Namespace: "testnamespace",
+					},
+					Spec: awsv1alpha1.AccountSpec{
+						BYOC: false,
+					},
+					Status: awsv1alpha1.AccountStatus{
+						State: string(awsv1alpha1.AccountReady),
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid account origin in migrated account",
+			args: args{
+				account: awsv1alpha1.Account{
+					ObjectMeta: v1.ObjectMeta{
+						OwnerReferences: nil,
+						Name:            "testaccount",
+						Namespace:       "testnamespace",
+						Labels: map[string]string{
+							"migration-time": "2022-09-22_13-23-40",
+						},
 					},
 					Spec: awsv1alpha1.AccountSpec{
 						BYOC: false,

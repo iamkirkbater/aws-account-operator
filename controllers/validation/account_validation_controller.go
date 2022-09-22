@@ -222,13 +222,24 @@ func ValidateAccountOrigin(account awsv1alpha1.Account) error {
 			Err:  errors.New("Account is a CCS account"),
 		}
 	}
-	if !account.IsOwnedByAccountPool() {
+
+	// Some accounts were migrated from the v3 hive to the new v4 hive shards.
+	// these will have a `migration-time` label on them which we can use to
+	// allow updating because attempting to add them to the account pool is a bad
+	// idea, locally that deletes the account CR so we don't want that.
+	isMigratedAccount := false
+	_, ok := account.ObjectMeta.Labels["migration-time"]
+	if ok {
+		isMigratedAccount = true
+	}
+	if !account.IsOwnedByAccountPool() && !isMigratedAccount {
 		log.Info("Will not validate account not owned by account pool")
 		return &AccountValidationError{
 			Type: InvalidAccount,
 			Err:  errors.New("Account is not in an account pool"),
 		}
 	}
+
 	if !account.IsReady() {
 		log.Info("Will not validate account not in a ready state")
 		return &AccountValidationError{
